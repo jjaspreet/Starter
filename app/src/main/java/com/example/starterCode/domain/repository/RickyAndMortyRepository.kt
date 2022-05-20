@@ -1,10 +1,8 @@
-package com.example.starterCode.data.remote
+package com.example.starterCode.domain.repository
 
 import com.example.starterCode.data.remote.dto.RickyAndMortyDto
-import retrofit2.http.GET
 
-interface RickAndMortyApi {
+interface RickyAndMortyRepository {
 
-    @GET("character")
     suspend fun getRickyAndMorty(): RickyAndMortyDto
 }
