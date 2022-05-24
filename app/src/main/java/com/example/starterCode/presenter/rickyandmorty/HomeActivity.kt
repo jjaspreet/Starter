@@ -17,21 +17,16 @@ import kotlinx.coroutines.flow.collect
 @AndroidEntryPoint
 class HomeActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityHomeBinding
-    var list = mutableListOf<RickyAndMorty>()
-    private val viewModel: RickyAndMortyViewModel by viewModels()
-
     private lateinit var rickyAndMortyAdapter: RickyAndMortyAdapter
+    private lateinit var binding: ActivityHomeBinding
+
+    private val viewModel: RickyAndMortyViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         val view = binding.root
         setContentView(view)
-
-        //initiate the grid  view
-        //in this case I make row grid in a row
-        //if you want to change that change the number
 
         binding.apply {
             recyclerView.layoutManager = GridLayoutManager(applicationContext,2)
