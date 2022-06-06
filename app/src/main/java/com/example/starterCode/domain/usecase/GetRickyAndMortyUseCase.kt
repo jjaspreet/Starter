@@ -1,11 +1,14 @@
 package com.example.starterCode.domain.usecase
 
+import androidx.paging.PagingData
 import com.example.starterCode.common.Resource
+import com.example.starterCode.data.remote.dto.Result
 import com.example.starterCode.data.remote.dto.toRickyAndMorty
 import com.example.starterCode.domain.model.RickyAndMorty
 import com.example.starterCode.domain.repository.RickyAndMortyRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import okio.IOException
@@ -14,9 +17,9 @@ import java.lang.Exception
 import javax.inject.Inject
 
 class GetRickyAndMortyUseCase @Inject constructor(
-    private val rickyAndMortyRepository: RickyAndMortyRepository
+     val rickyAndMortyRepository: RickyAndMortyRepository
 ) {
-
+/*
      operator fun invoke(): Flow<Resource<List<RickyAndMorty>>> = flow {
         try {
             emit(Resource.Loading())
@@ -29,6 +32,12 @@ class GetRickyAndMortyUseCase @Inject constructor(
         }catch (e : Exception){
             emit(Resource.Error("Couldn't reach server. Check your internet connection."))
         }
+    }
+    */
+
+     fun getResponse():Flow<PagingData<RickyAndMorty>> = flow{
+
+         rickyAndMortyRepository.getRickyAndMorty();
     }
 }
 

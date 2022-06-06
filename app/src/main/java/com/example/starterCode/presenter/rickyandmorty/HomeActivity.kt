@@ -3,21 +3,24 @@ package com.example.starterCode.presenter.rickyandmorty
 import android.os.Bundle
 import android.util.Log
 import android.view.View.GONE
-import android.view.View.VISIBLE
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
-import androidx.recyclerview.widget.GridLayoutManager
+import androidx.paging.LoadState
 import com.example.starterCode.common.toToast
 import com.example.starterCode.databinding.ActivityHomeBinding
 import com.example.starterCode.domain.model.RickyAndMorty
+import com.example.starterCode.presenter.rickyandmorty.adapter.RickyAndMortyAdapter
+import com.example.starterCode.presenter.rickyandmorty.adapter.RickyAndMortyLoadStateAdapter
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
-class HomeActivity : AppCompatActivity() {
+class HomeActivity : AppCompatActivity(), RickyAndMortyAdapter.OnItemClickListener {
 
-    private lateinit var rickyAndMortyAdapter: RickyAndMortyAdapter
     private lateinit var binding: ActivityHomeBinding
 
     private val viewModel: RickyAndMortyViewModel by viewModels()
@@ -28,32 +31,46 @@ class HomeActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+        val adapter = RickyAndMortyAdapter(this)
+
         binding.apply {
-            recyclerView.layoutManager = GridLayoutManager(applicationContext,2)
-            rickyAndMortyAdapter = RickyAndMortyAdapter(applicationContext)
-            recyclerView.adapter = rickyAndMortyAdapter
+            recyclerView.setHasFixedSize(true)
+            recyclerView.itemAnimator = null
+            recyclerView.adapter = adapter.withLoadStateHeaderAndFooter(
+                header = RickyAndMortyLoadStateAdapter { adapter.retry() },
+                footer = RickyAndMortyLoadStateAdapter { adapter.retry() }
+            )
+            buttonRetry.setOnClickListener { adapter.retry() }
         }
 
-        lifecycleScope.launchWhenStarted {
-            viewModel.rickyMortyResponse.collect {
-                when(it){
-                    is RickyAndMortyUIState.Loading ->{
-                       binding.progressLayout.visibility = VISIBLE
-                    }
+        lifecycleScope.launch  {
+            viewModel.getMovies().collectLatest { movies ->
+                adapter.submitData(movies)
+            }
+        }
 
-                    is RickyAndMortyUIState.Success ->{
-                        rickyAndMortyAdapter.setDataList(it.data)
-                        rickyAndMortyAdapter.notifyDataSetChanged()
-                        binding.progressLayout.visibility = GONE
-                    }
+        adapter.addLoadStateListener { loadState ->
+            binding.apply {
+                progressBar.isVisible = loadState.source.refresh is LoadState.Loading
+                recyclerView.isVisible = loadState.source.refresh is LoadState.NotLoading
+                buttonRetry.isVisible = loadState.source.refresh is LoadState.Error
+                textViewError.isVisible = loadState.source.refresh is LoadState.Error
 
-                    is RickyAndMortyUIState.Error ->{
-                       it.message.toToast(this@HomeActivity).show()
-                        binding.progressLayout.visibility = GONE
-                    }
-                    else -> Unit
+                // empty view
+                if (loadState.source.refresh is LoadState.NotLoading &&
+                    loadState.append.endOfPaginationReached &&
+                    adapter.itemCount < 1
+                ) {
+                    recyclerView.isVisible = false
+                    textViewEmpty.isVisible = true
+                } else {
+                    textViewEmpty.isVisible = false
                 }
             }
         }
+    }
+
+    override fun onItemClick(item: RickyAndMorty) {
+        item.name.toToast(this@HomeActivity).show()
     }
 }
